@@ -6,16 +6,28 @@ app = Flask(__name__)
 def handle_transfer():
     data = request.get_json()
     
-    # Get parameters from all contexts
     output_contexts = data.get("queryResult", {}).get("outputContexts", [])
     
     params = {}
     for context in output_contexts:
-        params.update(context.get("parameters", {}))
+        for key, value in context.get("parameters", {}).items():
+            if key not in params:
+                params[key] = value
     
-    amount = params.get("unit-currency", {}).get("amount", "N/A")
-    currency = params.get("unit-currency", {}).get("currency", "USD")
-    country = params.get("geo-country", "N/A")
+    # amount fix
+    unit_currency = params.get("unit-currency") or params.get("amount")
+    if isinstance(unit_currency, dict):
+        amount = unit_currency.get("amount", "N/A")
+        currency = unit_currency.get("currency", "USD")
+    else:
+        amount = unit_currency or "N/A"
+        currency = "USD"
+
+    # country fix
+    country = params.get("geo-country") or params.get("destination_country", "N/A")
+    if isinstance(country, dict):
+        country = country.get("country", "N/A")
+
     account = params.get("account_number", "N/A")
     bank = params.get("bank_name", "N/A")
     
