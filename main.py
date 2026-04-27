@@ -1,18 +1,23 @@
 from flask import Flask, request, jsonify
-import json
 
 app = Flask(__name__)
 
 @app.route("/", methods=["POST"])
 def handle_transfer():
     data = request.get_json()
-    parameters = data.get("queryResult", {}).get("parameters", {})
     
-    amount = parameters.get("unit-currency", {}).get("amount", "N/A")
-    currency = parameters.get("unit-currency", {}).get("currency", "USD")
-    country = parameters.get("geo-country", "N/A")
-    account = parameters.get("account_number", "N/A")
-    bank = parameters.get("bank_name", "N/A")
+    # Get parameters from all contexts
+    output_contexts = data.get("queryResult", {}).get("outputContexts", [])
+    
+    params = {}
+    for context in output_contexts:
+        params.update(context.get("parameters", {}))
+    
+    amount = params.get("unit-currency", {}).get("amount", "N/A")
+    currency = params.get("unit-currency", {}).get("currency", "USD")
+    country = params.get("geo-country", "N/A")
+    account = params.get("account_number", "N/A")
+    bank = params.get("bank_name", "N/A")
     
     transfer_id = f"TXN{abs(hash(str(amount)+str(account))) % 100000:05d}"
     
