@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+import re
 
 app = Flask(__name__)
 
@@ -28,7 +29,11 @@ def handle_transfer():
     if isinstance(country, dict):
         country = country.get("country", "N/A")
 
-    account = params.get("account_number", "N/A")
+    # account fix
+    account_raw = params.get("account_number", "N/A")
+    numbers_found = re.findall(r'\d+', str(account_raw))
+    account = numbers_found[0] if numbers_found else "N/A"
+
     bank = params.get("bank_name", "N/A")
     
     transfer_id = f"TXN{abs(hash(str(amount)+str(account))) % 100000:05d}"
